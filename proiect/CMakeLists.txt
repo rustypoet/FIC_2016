@@ -1,0 +1,5 @@
+cmake_minimum_required(VERSION 2.8)
+project(proiect)
+find_package( OpenCV REQUIRED )
+add_executable( proiect video.cpp Car.cpp Car.h )
+target_link_libraries( proiect ${OpenCV_LIBS} )
