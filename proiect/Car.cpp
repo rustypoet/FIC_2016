@@ -19,20 +19,15 @@ Car::~Car() {
     close(socket_desc);
 }
 
-void Car::sendCommand(char* cmd) {
-
-        //printf("Enter message : ");
-        //scanf("%s" , message);
+void Car::sendCommand(char* cmd) 
         char server_reply[200];
 
-        //Send some data
         if( send(socket_desc , cmd , strlen(cmd) , 0) < 0)
         {
             puts("Send failed");
             return;
         }
 
-        //Receive a reply from the server
         if( recv(socket_desc , server_reply , 200 , 0) < 0)
         {
             puts("recv failed");
@@ -46,8 +41,6 @@ void Car::sendCommand(char* cmd) {
 bool Car::connectToCar(){
 
 
-
-    //Create socket
     socket_desc = socket(AF_INET , SOCK_STREAM , 0);
     if (socket_desc == -1)
     {
@@ -61,7 +54,6 @@ bool Car::connectToCar(){
     server.sin_family = AF_INET;
     server.sin_port = htons( CAR_PORT );
 
-    //Connect to remote server
     if (connect(socket_desc , (struct sockaddr *)&server , sizeof(server)) < 0)
     {
         perror("connectToCar failed. Error");
