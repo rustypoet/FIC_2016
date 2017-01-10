@@ -10,6 +10,7 @@
 
 
 #include "Car.h"
+#include "Car.cpp"
 
 
 using namespace std;
@@ -31,14 +32,7 @@ int BLUE_S_MAX = 149;
 int BLUE_V_MIN = 197;
 int BLUE_V_MAX = 256;
 
-//bun
-/*int RED_H_MIN = 0;
-int RED_H_MAX = 204;
-int RED_S_MIN = 76;
-int RED_S_MAX = 158;
-int RED_V_MIN = 0;
-int RED_V_MAX = 256;
-*/
+
 int RED_H_MIN = 69;
 int RED_H_MAX = 94;
 int RED_S_MIN = 15;
@@ -68,14 +62,6 @@ int GREEN_S_MAX = 242;
 int GREEN_V_MIN = 210;
 int GREEN_V_MAX = 256;
 
-//vechi
-/*int YELLOW_H_MIN = 78;
-int YELLOW_H_MAX = 128;
-int YELLOW_S_MIN = 11;
-int YELLOW_S_MAX = 149;
-int YELLOW_V_MIN = 197;
-int YELLOW_V_MAX = 256;
-*/
 
 
 
@@ -85,15 +71,11 @@ RNG rng(12345);
 
 
 
-//default capture width and height
 const int FRAME_WIDTH = 640;
 const int FRAME_HEIGHT = 480;
-//max number of objects to be detected in frame
 const int MAX_NUM_OBJECTS = 50;
-//minimum and maximum object area
 const int MIN_OBJECT_AREA = 20 * 20;
 const int MAX_OBJECT_AREA = FRAME_HEIGHT*FRAME_WIDTH / 1.5;
-//names that will appear at the top of each window
 const std::string windowName = "Original Image";
 const std::string windowName1 = "HSV Image";
 const std::string windowName2 = "Thresholded Image";
@@ -174,12 +156,10 @@ void drawObject(int x, int y, Mat &frame) {
 
 	putText(frame, intToString(x) + "," + intToString(y), Point(x, y + 30), 1, 1, Scalar(0, 255, 0), 2);
 	//cout << "x,y: " << x << ", " << y;
-
 }
 void morphOps(Mat &thresh) {
 
-	//create structuring element that will be used to "dilate" and "erode" image.
-	//the element chosen here is a 3px by 3px rectangle
+	
 
 	Mat erodeElement = getStructuringElement(MORPH_RECT, Size(3, 3));
 	//dilate with larger element so make sure object is nicely visible
@@ -204,22 +184,17 @@ void trackFilteredObject(int &x, int &y, Mat threshold, Mat &cameraFeed) {
 	vector<Vec4i> hierarchy;
 	//find contours of filtered image using openCV findContours function
 	findContours(temp, contours, hierarchy, CV_RETR_CCOMP, CV_CHAIN_APPROX_SIMPLE);
-	//use moments method to find our filtered object
 	double refArea = 0;
 	bool objectFound = false;
 	if (hierarchy.size() > 0) {
 		int numObjects = hierarchy.size();
-		//if number of objects greater than MAX_NUM_OBJECTS we have a noisy filter
 		if (numObjects < MAX_NUM_OBJECTS) {
 			for (int index = 0; index >= 0; index = hierarchy[index][0]) {
 
 				Moments moment = moments((cv::Mat)contours[index]);
 				double area = moment.m00;
 
-				//if the area is less than 20 px by 20px then it is probably just noise
-				//if the area is the same as the 3/2 of the image size, probably just a bad filter
-				//we only want the object with the largest area so we safe a reference area each
-				//iteration and compare it to the area in the next iteration.
+		
 				if (area > MIN_OBJECT_AREA && area<MAX_OBJECT_AREA && area>refArea) {
 					x = moment.m10 / area;
 					y = moment.m01 / area;
@@ -233,10 +208,10 @@ void trackFilteredObject(int &x, int &y, Mat threshold, Mat &cameraFeed) {
 			}
 			//let user know you found an object
 			if (objectFound == true) {
-				//putText(cameraFeed, "Tracking Object", Point(0, 50), 2, 1, Scalar(0, 255, 0), 2);
-				//draw object location on screen
-				//cout << x << "," << y;
-                //drawObject(x, y, cameraFeed);
+				putText(cameraFeed, "Tracking Object", Point(0, 50), 2, 1, Scalar(0, 255, 0), 2);
+				draw object location on screen
+				cout << x << "," << y;
+                		drawObject(x, y, cameraFeed);
 
 			}
 
@@ -249,10 +224,6 @@ void trackFilteredObject(int &x, int &y, Mat threshold, Mat &cameraFeed) {
 void contouresStuff(InputOutputArray image){
     vector<vector<Point> > contours;
     vector<Vec4i> hierarchy;
-
-    /*Mat image2;
-    image2 = imread("/home/kissy/openCV_workspace/lena.jpg", 1 );
-    */
 
     findContours(image, contours, hierarchy, RETR_TREE, CHAIN_APPROX_SIMPLE, Point(0, 0) );
 
@@ -278,62 +249,6 @@ void contouresStuff(InputOutputArray image){
 
 }
 
-//void createSocket() {
-//
-//    char message[100];
-//    char server_reply[200];
-//
-//    struct sockaddr_in server , client;
-//    int socket_desc;
-//    //Create socket
-//    socket_desc = socket(AF_INET , SOCK_STREAM , 0);
-//    if (socket_desc == -1)
-//    {
-//        printf("Could not create socket");
-//    }
-//    puts("Socket created");
-//
-//
-//
-//    server.sin_addr.s_addr = inet_addr(CAR_IP);
-//    server.sin_family = AF_INET;
-//    server.sin_port = htons( CAR_PORT );
-//
-//    //Connect to remote server
-//    if (connectToCar(socket_desc , (struct sockaddr *)&server , sizeof(server)) < 0)
-//    {
-//        perror("connectToCar failed. Error");
-//        return;
-//    }
-//
-//    puts("Connected\n");
-//    while(1)
-//    {
-//        printf("Enter message : ");
-//        scanf("%s" , message);
-//
-//        //Send some data
-//        if( send(socket_desc , message , strlen(message) , 0) < 0)
-//        {
-//            puts("Send failed");
-//            return;
-//        }
-//
-//        //Receive a reply from the server
-//        if( recv(socket_desc , server_reply , 2000 , 0) < 0)
-//        {
-//            puts("recv failed");
-//            break;
-//        }
-//
-//        puts("Server reply :");
-//        puts(server_reply);
-//    }
-//
-//    close(socket_desc);
-//
-//
-//}
 
 int main(int argc, char* argv[])
 {
@@ -364,8 +279,7 @@ int main(int argc, char* argv[])
         //open capture object at location zero (default location for webcam)
         capture.open(0);
     }else{
-        if(strstr(argv[1], "rtmp://") == NULL){
-            //it is not the link to the live stream, so hard code it
+        if(strstr(argv[1], "rtmp://") == NULL)
             capture.open("rtmp://172.16.254.63/live/live");
         }else{
             capture.open(argv[1]);
@@ -373,11 +287,10 @@ int main(int argc, char* argv[])
 
     }
 
-	//set height and width of capture frame
+	
 	capture.set(CV_CAP_PROP_FRAME_WIDTH, FRAME_WIDTH);
 	capture.set(CV_CAP_PROP_FRAME_HEIGHT, FRAME_HEIGHT);
-	//start an infinite loop where webcam feed is copied to cameraFeed matrix
-	//all of our operations will be performed within this loop
+	//livefeed
 
 /*
     Car c;
@@ -394,19 +307,13 @@ int main(int argc, char* argv[])
 	while (1) {
 
 
-		//store image to matrix
+		//Saving the feed
 		capture.read(cameraFeed);
-		//convert frame from BGR to HSV colorspace
 		cvtColor(cameraFeed, HSV, COLOR_BGR2HSV);
-		//filter HSV image between values and store filtered image to
-		//thresholdBlue matrix
-		//inRange(HSV, Scalar(H_MIN, S_MIN, V_MIN), Scalar(H_MAX, S_MAX, V_MAX), thresholdRed);
-        //inRange(HSV, Scalar(BLUE_H_MIN, BLUE_S_MIN, BLUE_V_MIN), Scalar(BLUE_H_MAX, BLUE_S_MAX, BLUE_V_MAX), thresholdBlue);
         inRange(HSV, Scalar(BLACK_H_MIN, BLACK_S_MIN, BLACK_V_MIN), Scalar(BLACK_H_MAX, BLACK_S_MAX, BLACK_V_MAX), thresholdBlue);
 
         inRange(HSV, Scalar(RED_H_MIN, RED_S_MIN, RED_V_MIN), Scalar(RED_H_MAX, RED_S_MAX, RED_V_MAX), thresholdRed);
-		//perform morphological operations on thresholded image to eliminate noise
-		//and emphasize the filtered object(s)
+		//noise correction
 		if (useMorphOps) {
             morphOps(thresholdBlue);
             morphOps(thresholdRed);
@@ -414,9 +321,7 @@ int main(int argc, char* argv[])
 
         contouresStuff(thresholdBlue);
 
-		//pass in thresholded frame to our object tracking function
-		//this function will return the x and y coordinates of the
-		//filtered object
+		//Cord return
 		if (trackObjects) {
             trackFilteredObject(x, y, thresholdBlue, cameraFeed);
             trackFilteredObject(x, y, thresholdRed, cameraFeed);
